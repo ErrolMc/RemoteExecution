@@ -1,53 +1,82 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <netdb.h> 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <string.h> 
+#include <sys/socket.h> 
+#define MAX 80 
+#define PORT 8080 
+#define SA struct sockaddr 
 
-#define MAX 128
 
-char** GetArguments(int* arguments)
-{
-    (*arguments) = 0;
+void func(int sockfd) 
+{ 
+	char buff[MAX]; 
+	int n; 
+	for (;;) 
+    { 
+		bzero(buff, sizeof(buff)); 
 
-    char* token;
-    char** buff = malloc(MAX * sizeof(char*));
+        // get the command to send
+        printf("\n > ");
+        gets(buff);
 
-    token = strtok(NULL, " ");
-    while (token != NULL)
-    {
-        buff[*arguments] = token;
-        (*arguments)++;
-        token = strtok(NULL, " ");
-    }
-
-    return buff;
-}
-
-int main()
-{
-    while (1)
-    {
-        char command[MAX];
-        gets(command);
-
-        if (strcmp(command, "") == 0)
+        if (strcmp(buff, "") == 0)
             continue;
 
+        // send the data
+        write(sockfd, buff, sizeof(buff)); 
+
+        // wait for a response
+		bzero(buff, sizeof(buff)); 
+		read(sockfd, buff, sizeof(buff)); 
+
+        // process the response
         char* token;
-        token = strtok(command, " ");
+		token = strtok(buff, " ");
 
-        if (strcmp(token, "put") == 0)
+        if (strcmp(token, "exit") == 0)
         {
-            int numArguments = 0;
-            char** arguments = GetArguments(&numArguments);
+            printf("Client exit\n");
+            break;
+        }
 
-        }
-        else if (strcmp(token, "sys") == 0)
-        {
-            printf("sys\n");
-        }
-        else if (strcmp(token, "quit") == 0)
-        {
-            exit(0);
-        }
-    }
-}
+        printf("server > %s", buff);
+	} 
+} 
+
+int main() 
+{ 
+	int sockfd, connfd; 
+	struct sockaddr_in servaddr, cli; 
+
+	// socket create and varification 
+	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+	if (sockfd == -1) 
+    { 
+		printf("socket creation failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("Socket successfully created..\n"); 
+	bzero(&servaddr, sizeof(servaddr)); 
+
+	// assign IP, PORT 
+	servaddr.sin_family = AF_INET; 
+	servaddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+	servaddr.sin_port = htons(PORT); 
+
+	// connect the client socket to server socket 
+	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) 
+    { 
+		printf("connection with the server failed...\n"); 
+		exit(0); 
+	} 
+	else
+		printf("connected to the server..\n"); 
+
+	// function for chat 
+	func(sockfd); 
+
+	// close the socket 
+	close(sockfd); 
+} 
