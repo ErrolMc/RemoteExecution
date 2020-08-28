@@ -37,8 +37,6 @@ void ChatToClient(int sockfd)
     // infinite loop for chat 
 	for (;;) 
     { 
-		printf("wat\n");
-
 		bzero(buff, MAX);
 		bzero(res, MAX);
 
@@ -48,19 +46,19 @@ void ChatToClient(int sockfd)
 		printf("client > %s\n", buff);
 
 		char* token = strtok(buff, " ");
-
+		
 		if (strcmp(token, "put") == 0)
 		{
 			int numArguments = 0;
 			char** arguments = GetArguments(&numArguments);
 
-			strcpy(res, "put processed with");
+			strcpy(res, "put processed with ");
 
 			char argumentString[3];
 			sprintf(argumentString, "%d", numArguments);
 
 			strcat(res, argumentString);
-			strcat(res, "arguments\n");
+			strcat(res, " arguments");
 
 			// free the string array
 			//for (int i = 0; i < numArguments; i++)
@@ -69,12 +67,15 @@ void ChatToClient(int sockfd)
 		}
 		else if (strcmp(token, "sys") == 0)
 		{
-			printf("sys processed\n");
 			strcpy(res, "sys processed");
 		}
 		else if (strcmp(token, "exit") == 0)
 		{
 			strcpy(res, "exit");
+		}
+		else
+		{
+			strcpy(res, "unknown command");
 		}
 
 		// give the response
@@ -91,12 +92,14 @@ void ChatToClient(int sockfd)
 // Driver function 
 int main() 
 { 
-	int sockfd, connfd, len; 
-	struct sockaddr_in servaddr, cli; 
+	const int BACKLOG = 5;
+
+	int socketDescriptor, connfd, len; 
+	struct sockaddr_in serverAddress, cli; 
 
 	// socket create and verification 
-	sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-	if (sockfd == -1) 
+	socketDescriptor = socket(AF_INET, SOCK_STREAM, 0); 
+	if (socketDescriptor == -1) 
     { 
 		printf("socket creation failed...\n"); 
 		exit(0); 
@@ -104,15 +107,15 @@ int main()
 	else
 		printf("Socket successfully created..\n"); 
 	
-    bzero(&servaddr, sizeof(servaddr)); 
+    bzero(&serverAddress, sizeof(serverAddress)); 
 
 	// assign IP, PORT 
-	servaddr.sin_family = AF_INET; 
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); // "host byte order" to "network byte order" long
-	servaddr.sin_port = htons(PORT); // "host byte order" to "network byte order" short
+	serverAddress.sin_family = AF_INET; 
+	serverAddress.sin_addr.s_addr = htonl(INADDR_ANY); // "host byte order" to "network byte order" long
+	serverAddress.sin_port = htons(PORT); // "host byte order" to "network byte order" short
 
 	// Binding newly created socket to given IP and verification 
-	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) 
+	if ((bind(socketDescriptor, (SA*)&serverAddress, sizeof(serverAddress))) != 0) 
     { 
 		printf("socket bind failed...\n"); 
 		exit(0); 
@@ -121,7 +124,7 @@ int main()
 		printf("Socket successfully binded..\n"); 
 
 	// Now server is ready to listen and verification 
-	if ((listen(sockfd, 5)) != 0) 
+	if ((listen(socketDescriptor, BACKLOG)) != 0) 
     { 
 		printf("Listen failed...\n"); 
 		exit(0); 
@@ -132,7 +135,7 @@ int main()
 	len = sizeof(cli); 
 
 	// Accept the data packet from client and verification 
-	connfd = accept(sockfd, (SA*)&cli, &len); 
+	connfd = accept(socketDescriptor, (SA*)&cli, &len); 
 	if (connfd < 0) 
     {
 		printf("server acccept failed...\n"); 
@@ -143,7 +146,7 @@ int main()
 
 	// Function for chatting between client and server 
 	ChatToClient(connfd); 
-
+	
 	// After chatting close the socket 
-	close(sockfd); 
+	close(socketDescriptor); 
 } 
