@@ -82,15 +82,31 @@ void ChatToClient(int sockfd)
 			int numArguments = 0;
 			char** arguments = GetArguments(&numArguments);
 
+			// create the directory
+			char directory[MAX] = "./";
+			strcat(directory, arguments[0]);
+
+			struct stat st;
+			if (stat(directory, &st) == -1)
+				mkdir(directory, 0777);
+
 			// check if we are overriding
 			int overrite = 0;
 			int numFiles = 0;
-			for (int i = 0; i < numArguments; i++)
+			for (int i = 1; i < numArguments; i++)
 			{
 				if (strcmp(arguments[i], "-f") == 0)
 					overrite = 1;
 				else
 					numFiles++;
+			}
+
+			// check if there are files to even upload
+			if (numFiles == 0)
+			{
+				strcpy(res, "error");
+				write(sockfd, res, sizeof(res));
+				continue;
 			}
 
 			// send a ready response
@@ -101,12 +117,18 @@ void ChatToClient(int sockfd)
 			bzero(buff, sizeof(buff));
 
 			FILE* curFile;
-			for (int i = 0; i < numFiles; i++)
+			for (int i = 1; i <= numFiles; i++)
 			{
 				read(sockfd, res, sizeof(res));
 				int fileSize = atoi(res);
+				
+				// get the file name
+				char fileName[MAX];
+				strcpy(fileName, directory);
+				strcat(fileName, "/");
+				strcat(fileName, arguments[i]);
 
-				int exists = DoesFileExist(arguments[i]);
+				int exists = DoesFileExist(fileName);
 				int shouldRead = !(exists && !overrite);
 
 				strcpy(res, shouldRead ? "read" : "continue");
@@ -115,7 +137,7 @@ void ChatToClient(int sockfd)
 				if (!shouldRead)
 					continue;
 
-				curFile = fopen(arguments[i], "w+");
+				curFile = fopen(fileName, "w+");
 				
 				ssize_t remainingData = fileSize;
 				while (remainingData > 0)
@@ -137,8 +159,28 @@ void ChatToClient(int sockfd)
 			int numArguments = 0;
 			char** arguments = GetArguments(&numArguments);
 
-			char* fileName = arguments[0];
-			int exists = DoesFileExist(fileName);
+			if (numArguments < 2)
+			{
+				strcpy(res, "done");
+				write(sockfd, res, sizeof(res));
+				continue;
+			}
+
+			// see if the directory exists
+			char directory[MAX] = "./";
+			strcat(directory, arguments[0]);
+
+			struct stat st;
+			if (stat(directory, &st) == -1)
+			{
+				strcpy(res, "done");
+				write(sockfd, res, sizeof(res));
+				continue;
+			}
+
+			strcat(directory, "/");
+			strcat(directory, arguments[1]);
+			int exists = DoesFileExist(directory);
 
 			if (!exists)
 			{
@@ -147,7 +189,7 @@ void ChatToClient(int sockfd)
 			}
 			else
 			{
-				FILE* file = fopen(fileName, "r");
+				FILE* file = fopen(directory, "r");
 
 				int curLines = 0;
 				while (fgets(res, sizeof(res), file))

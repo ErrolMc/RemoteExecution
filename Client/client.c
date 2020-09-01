@@ -77,7 +77,7 @@ void ChatWithServer(int socketDescriptor)
 					struct stat fileStat;
 
 					// send the files 1 by 1
-					for (int i = 0; i < numArguments; i++)
+					for (int i = 1; i < numArguments; i++)
 					{
 						// make sure we arent the -f arg
 						if (strcmp(arguments[i], "-f") == 0) 
@@ -99,6 +99,8 @@ void ChatWithServer(int socketDescriptor)
 						
 						sprintf(res, "%d", fileStat.st_size);
 
+						printf("size: %s", res);
+
 						// write the file size
 						write(socketDescriptor, res, sizeof(res));
 
@@ -119,6 +121,10 @@ void ChatWithServer(int socketDescriptor)
 						
 						fclose(curFile);
 					}
+				}
+				else if (strcmp(buff, "error") == 0)
+				{
+					continue;
 				}
 			}
 		}
@@ -178,36 +184,8 @@ void ChatWithServer(int socketDescriptor)
 	} 
 } 
 
-void test()
-{
-	// open the file
-	FILE* curFile = fopen("test.txt", "r"); 
-	struct stat fileStat;
-
-	int fd = fileno(curFile);
-
-	printf("File\n");
-	char c = fgetc(curFile); 
-	while (c != EOF) 
-	{ 
-		printf ("%c", c); 
-		c = fgetc(curFile); 
-	} 
-	printf("\n");
-
-	// get the file stats
-	int statres = fstat(fd, &fileStat);
-	printf("stat: %d\n", statres);
-
-	
-}
 int main() 
 { 
-	//test();
-	//return 1;
-
-
-
 	int socketDescriptor, connfd; 
 	struct sockaddr_in serverAddress, cli; 
 
