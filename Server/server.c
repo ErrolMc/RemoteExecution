@@ -5,7 +5,21 @@
 #include <string.h> 
 #include <sys/socket.h> 
 #include <sys/types.h> 
-#define MAX 80 
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/sendfile.h>
+
+#define MAX 256 
 #define PORT 8080 
 #define SA struct sockaddr 
 
@@ -27,9 +41,22 @@ char** GetArguments(int* arguments)
     return buff;
 }
 
+int DoesFileExist(const char * filename)
+{
+    /* try to open file to read */
+    FILE *file;
+    if (file = fopen(filename, "r"))
+	{
+        fclose(file);
+        return 1;
+    }
+    return 0;
+}
+
 // Function designed for chat between client and server. 
 void ChatToClient(int sockfd) 
 { 
+	char buffCopy[MAX];
 	char res[MAX];
 	char buff[MAX]; 
 	int n; 
@@ -42,27 +69,68 @@ void ChatToClient(int sockfd)
 
 		// first read (PAUSES UNTIL THERES DATA)
 		read(sockfd, buff, sizeof(buff)); 
+		strcpy(buffCopy, buff);
 
 		printf("client > %s\n", buff);
 
-		char* token = strtok(buff, " ");
+		char* token = strtok(buffCopy, " ");
 		
 		if (strcmp(token, "put") == 0)
 		{
 			int numArguments = 0;
 			char** arguments = GetArguments(&numArguments);
 
-			strcpy(res, "put processed with ");
+			// check if we are overriding
+			int overrite = 0;
+			int numFiles = 0;
+			for (int i = 0; i < numArguments; i++)
+			{
+				if (strcmp(arguments[i], "-f") == 0)
+					overrite = 1;
+				else
+					numFiles++;
+			}
 
-			char argumentString[3];
-			sprintf(argumentString, "%d", numArguments);
+			// send a ready response
+			strcpy(res, "ready");
+			write(sockfd, res, sizeof(res));
 
-			strcat(res, argumentString);
-			strcat(res, " arguments");
+			bzero(res, sizeof(res));
+			bzero(buff, sizeof(buff));
 
-			// free the string array
-			//for (int i = 0; i < numArguments; i++)
-			//	free(arguments[i]);
+			FILE* curFile;
+			for (int i = 0; i < numFiles; i++)
+			{
+				read(sockfd, res, sizeof(res));
+				int fileSize = atoi(res);
+
+				printf("size: %d\n", fileSize);
+
+				int exists = DoesFileExist(arguments[i]);
+				int shouldRead = !(exists && !overrite);
+
+				
+				strcpy(res, shouldRead ? "read" : "continue");
+
+				write(sockfd, res, sizeof(res));
+				if (!shouldRead)
+					continue;
+
+				curFile = fopen(arguments[i], "w+");
+				
+				ssize_t remainingData = fileSize;
+				while (remainingData > 0)
+				{
+					ssize_t n = recv(sockfd, buff, MAX, 0);
+					remainingData -= n;
+					fprintf(curFile, "%s", buff);
+				}
+
+				printf("read file\n");
+
+				fclose(curFile);
+			}
+			
 			free(arguments);
 		}
 		else if (strcmp(token, "sys") == 0)
@@ -146,7 +214,7 @@ int main()
 
 	// Function for chatting between client and server 
 	ChatToClient(connfd); 
-	
+
 	// After chatting close the socket 
 	close(socketDescriptor); 
 } 
