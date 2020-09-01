@@ -23,6 +23,8 @@
 #define PORT 8080 
 #define SA struct sockaddr 
 
+const int GET_LINE_COUNT = 40;
+
 char** GetArguments(int* arguments)
 {
     (*arguments) = 0;
@@ -104,12 +106,9 @@ void ChatToClient(int sockfd)
 				read(sockfd, res, sizeof(res));
 				int fileSize = atoi(res);
 
-				printf("size: %d\n", fileSize);
-
 				int exists = DoesFileExist(arguments[i]);
 				int shouldRead = !(exists && !overrite);
 
-				
 				strcpy(res, shouldRead ? "read" : "continue");
 
 				write(sockfd, res, sizeof(res));
@@ -132,6 +131,46 @@ void ChatToClient(int sockfd)
 			}
 			
 			free(arguments);
+		}
+		else if (strcmp(token, "get") == 0)
+		{			
+			int numArguments = 0;
+			char** arguments = GetArguments(&numArguments);
+
+			char* fileName = arguments[0];
+			int exists = DoesFileExist(fileName);
+
+			if (!exists)
+			{
+				strcpy(res, "done");
+				write(sockfd, res, sizeof(res));
+			}
+			else
+			{
+				FILE* file = fopen(fileName, "r");
+
+				int curLines = 0;
+				while (fgets(res, sizeof(res), file))
+				{
+					write(sockfd, res, sizeof(res));
+					curLines++;
+					
+					if (curLines == GET_LINE_COUNT)
+					{
+						curLines = 0;
+
+						strcpy(res, "wait");
+						write(sockfd, res, sizeof(res));
+
+						// wait for a key to be pressed
+						read(sockfd, buff, sizeof(buff));
+					}
+				}
+
+				printf("Done get\n");
+
+				strcpy(res, "done");
+			}
 		}
 		else if (strcmp(token, "sys") == 0)
 		{

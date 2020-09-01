@@ -76,13 +76,9 @@ void ChatWithServer(int socketDescriptor)
 					FILE* curFile;
 					struct stat fileStat;
 
-					printf("Num args: %d\n", numArguments);
-
 					// send the files 1 by 1
 					for (int i = 0; i < numArguments; i++)
 					{
-						printf("arg: %d\n", i);
-
 						// make sure we arent the -f arg
 						if (strcmp(arguments[i], "-f") == 0) 
 							continue;
@@ -103,8 +99,6 @@ void ChatWithServer(int socketDescriptor)
 						
 						sprintf(res, "%d", fileStat.st_size);
 
-						printf("file size: %s\n", res);
-
 						// write the file size
 						write(socketDescriptor, res, sizeof(res));
 
@@ -116,7 +110,6 @@ void ChatWithServer(int socketDescriptor)
 						
 						while (fgets(buff, MAX, curFile) != NULL)
 						{
-							printf("%s\n", buff);
 							if (send(socketDescriptor, buff, sizeof(buff), 0) == -1)
 							{
 								printf("Error sending data\n");
@@ -128,6 +121,36 @@ void ChatWithServer(int socketDescriptor)
 					}
 				}
 			}
+		}
+		else if (strcmp(token, "get") == 0)
+		{
+			// send the command
+			write(socketDescriptor, buff, sizeof(buff));
+
+			while (1)
+			{
+				bzero(buff, sizeof(buff));
+				read(socketDescriptor, buff, sizeof(buff));
+
+				if (strcmp(buff, "wait") == 0)
+				{
+					printf("Enter any character to continue > ");
+					gets();
+					strcpy(res, "continue");
+					write(socketDescriptor, res, sizeof(res));
+				}
+				else if (strcmp(buff, "done") == 0)
+				{
+					break;
+				}
+				else
+				{
+					printf("%s", buff);
+				}
+			}
+
+			printf("\n");
+			continue;
 		}
 		else
 		{
