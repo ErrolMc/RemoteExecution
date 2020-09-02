@@ -1,7 +1,7 @@
 #include "utils.h"
 #include "put.h"
 
-const int GET_LINE_COUNT = 40;
+
 
 // Function designed for chat between client and server. 
 void ChatToClient(int socketDescriptor) 
@@ -31,84 +31,28 @@ void ChatToClient(int socketDescriptor)
 		}
 		else if (strcmp(token, "get") == 0)
 		{			
-			int numArguments = 0;
-			char** arguments = GetArguments(&numArguments);
-
-			if (numArguments < 2)
-			{
-				strcpy(res, "done");
-				write(socketDescriptor, res, sizeof(res));
-				continue;
-			}
-
-			// see if the directory exists
-			char directory[MAX] = "./";
-			strcat(directory, arguments[0]);
-
-			struct stat st;
-			if (stat(directory, &st) == -1)
-			{
-				strcpy(res, "done");
-				write(socketDescriptor, res, sizeof(res));
-				continue;
-			}
-
-			strcat(directory, "/");
-			strcat(directory, arguments[1]);
-			int exists = DoesFileExist(directory);
-
-			if (!exists)
-			{
-				strcpy(res, "done");
-				write(socketDescriptor, res, sizeof(res));
-			}
-			else
-			{
-				FILE* file = fopen(directory, "r");
-
-				int curLines = 0;
-				while (fgets(res, sizeof(res), file))
-				{
-					write(socketDescriptor, res, sizeof(res));
-					curLines++;
-					
-					if (curLines == GET_LINE_COUNT)
-					{
-						curLines = 0;
-
-						strcpy(res, "wait");
-						write(socketDescriptor, res, sizeof(res));
-
-						// wait for a key to be pressed
-						read(socketDescriptor, buff, sizeof(buff));
-					}
-				}
-
-				printf("Done get\n");
-
-				strcpy(res, "done");
-			}
+			ProcessGet(socketDescriptor, buff, res);
 		}
 		else if (strcmp(token, "sys") == 0)
 		{
 			strcpy(res, "sys processed");
+			write(socketDescriptor, res, MAX);
 		}
 		else if (strcmp(token, "exit") == 0)
 		{
 			strcpy(res, "exit");
+			write(socketDescriptor, res, MAX);
+
+			if (strcmp(res, "exit") == 0)
+			{
+				printf("Server exit\n");
+				break;
+			}
 		}
 		else
 		{
 			strcpy(res, "unknown command");
-		}
-
-		// give the response
-		write(socketDescriptor, res, sizeof(res));
-
-		if (strcmp(res, "exit") == 0)
-		{
-			printf("Server exit\n");
-			break;
+			write(socketDescriptor, res, sizeof(res));
 		}
 	} 
 } 

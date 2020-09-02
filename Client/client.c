@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "put.h"
+#include "get.h"
 
 void ChatWithServer(int socketDescriptor) 
 { 
@@ -27,37 +28,11 @@ void ChatWithServer(int socketDescriptor)
 
 		if (strcmp(token, "put") == 0)
 		{
-			ProcessPut(socketDescriptor, &buff, &res);
+			ProcessPut(socketDescriptor, buff, res);
 		}
 		else if (strcmp(token, "get") == 0)
 		{
-			// send the command
-			write(socketDescriptor, buff, sizeof(buff));
-
-			while (1)
-			{
-				bzero(buff, sizeof(buff));
-				read(socketDescriptor, buff, sizeof(buff));
-
-				if (strcmp(buff, "wait") == 0)
-				{
-					printf("Enter any character to continue > ");
-					gets();
-					strcpy(res, "continue");
-					write(socketDescriptor, res, sizeof(res));
-				}
-				else if (strcmp(buff, "done") == 0)
-				{
-					break;
-				}
-				else
-				{
-					printf("%s", buff);
-				}
-			}
-
-			printf("\n");
-			continue;
+			ProcessGet(socketDescriptor, buff, res);
 		}
 		else if (strcmp(token, "run") == 0)
 		{
@@ -67,25 +42,25 @@ void ChatWithServer(int socketDescriptor)
 		{
 			// send the data
 			write(socketDescriptor, buff, sizeof(buff)); 
+		
+			// wait for a response
+			bzero(buff, sizeof(buff)); 
+			read(socketDescriptor, buff, sizeof(buff)); 
+
+			// copy the buffer for processing of the command
+			strcpy(buffCopy, buff);
+
+			// process the response
+			token = strtok(buffCopy, " ");
+			
+			if (strcmp(token, "exit") == 0)
+			{
+				printf("Client exit\n");
+				break;
+			}
+
+			printf("server > %s\n", buff);
 		}
-
-        // wait for a response
-		bzero(buff, sizeof(buff)); 
-		read(socketDescriptor, buff, sizeof(buff)); 
-
-        // copy the buffer for processing of the command
-        strcpy(buffCopy, buff);
-
-        // process the response
-		token = strtok(buffCopy, " ");
-        
-        if (strcmp(token, "exit") == 0)
-        {
-            printf("Client exit\n");
-            break;
-        }
-
-        printf("server > %s\n", buff);
 	} 
 } 
 
