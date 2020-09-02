@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/sendfile.h>
+#include <sys/wait.h>
 
 #define MAX 256 
 #define PORT 8080 

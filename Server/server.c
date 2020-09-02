@@ -1,7 +1,7 @@
 #include "utils.h"
 #include "put.h"
-
-
+#include "get.h"
+#include "run.h"
 
 // Function designed for chat between client and server. 
 void ChatToClient(int socketDescriptor) 
@@ -9,7 +9,6 @@ void ChatToClient(int socketDescriptor)
 	char buffCopy[MAX];
 	char res[MAX];
 	char buff[MAX]; 
-	int n; 
 
     // infinite loop for chat 
 	for (;;) 
@@ -32,6 +31,14 @@ void ChatToClient(int socketDescriptor)
 		else if (strcmp(token, "get") == 0)
 		{			
 			ProcessGet(socketDescriptor, buff, res);
+		}
+		else if (strcmp(token, "get") == 0)
+		{
+			ProcessRun(socketDescriptor, buff, res);
+		}
+		else if (strcmp(token, "run") == 0)
+		{
+			ProcessRun(socketDescriptor, buff, res);
 		}
 		else if (strcmp(token, "sys") == 0)
 		{

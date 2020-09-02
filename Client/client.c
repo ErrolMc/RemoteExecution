@@ -1,13 +1,13 @@
 #include "utils.h"
 #include "put.h"
 #include "get.h"
+#include "run.h"
 
 void ChatWithServer(int socketDescriptor) 
 { 
 	char buffCopy[MAX];
 	char buff[MAX]; 
 	char res[MAX];
-	int n; 
 
 	for (;;) 
     { 
@@ -36,7 +36,7 @@ void ChatWithServer(int socketDescriptor)
 		}
 		else if (strcmp(token, "run") == 0)
 		{
-
+			ProcessRun(socketDescriptor, buff, res);
 		}
 		else
 		{

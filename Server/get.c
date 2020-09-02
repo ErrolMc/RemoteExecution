@@ -43,7 +43,7 @@ void ProcessGet(int socketDescriptor, char* buff, char* res)
             write(socketDescriptor, res, MAX);
             curLines++;
             
-            if (curLines == GET_LINE_COUNT)
+            if (curLines == 40)
             {
                 curLines = 0;
 
