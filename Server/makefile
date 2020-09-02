@@ -1,4 +1,6 @@
-server: server.o
-	cc server.o -o server
-server.o: server.c
+server: server.o utils.o
+	cc server.o utils.o -o server
+server.o: server.c utils.h
 	cc -c server.c
+utils.o: utils.c utils.h
+	cc -c utils.c

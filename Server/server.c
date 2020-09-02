@@ -1,47 +1,7 @@
-#include <stdio.h> 
-#include <netdb.h> 
-#include <netinet/in.h> 
-#include <stdlib.h> 
-#include <string.h> 
-#include <sys/socket.h> 
-#include <sys/types.h> 
-
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/sendfile.h>
-
-#define MAX 256 
-#define PORT 8080 
-#define SA struct sockaddr 
+#include "utils.h"
 
 const int GET_LINE_COUNT = 40;
 
-char** GetArguments(int* arguments)
-{
-    (*arguments) = 0;
-
-    char* token;
-    char** buff = malloc(MAX * sizeof(char*));
-
-    token = strtok(NULL, " ");
-    while (token != NULL)
-    {
-        buff[*arguments] = token;
-        (*arguments)++;
-        token = strtok(NULL, " ");
-    }
-
-    return buff;
-}
 
 int DoesFileExist(const char * filename)
 {
