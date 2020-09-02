@@ -1,22 +1,10 @@
 #include "utils.h"
+#include "put.h"
 
 const int GET_LINE_COUNT = 40;
 
-
-int DoesFileExist(const char * filename)
-{
-    /* try to open file to read */
-    FILE *file;
-    if (file = fopen(filename, "r"))
-	{
-        fclose(file);
-        return 1;
-    }
-    return 0;
-}
-
 // Function designed for chat between client and server. 
-void ChatToClient(int sockfd) 
+void ChatToClient(int socketDescriptor) 
 { 
 	char buffCopy[MAX];
 	char res[MAX];
@@ -30,7 +18,7 @@ void ChatToClient(int sockfd)
 		bzero(res, MAX);
 
 		// first read (PAUSES UNTIL THERES DATA)
-		read(sockfd, buff, sizeof(buff)); 
+		read(socketDescriptor, buff, sizeof(buff)); 
 		strcpy(buffCopy, buff);
 
 		printf("client > %s\n", buff);
@@ -39,80 +27,7 @@ void ChatToClient(int sockfd)
 		
 		if (strcmp(token, "put") == 0)
 		{
-			int numArguments = 0;
-			char** arguments = GetArguments(&numArguments);
-
-			// create the directory
-			char directory[MAX] = "./";
-			strcat(directory, arguments[0]);
-
-			struct stat st;
-			if (stat(directory, &st) == -1)
-				mkdir(directory, 0777);
-
-			// check if we are overriding
-			int overrite = 0;
-			int numFiles = 0;
-			for (int i = 1; i < numArguments; i++)
-			{
-				if (strcmp(arguments[i], "-f") == 0)
-					overrite = 1;
-				else
-					numFiles++;
-			}
-
-			// check if there are files to even upload
-			if (numFiles == 0)
-			{
-				strcpy(res, "error");
-				write(sockfd, res, sizeof(res));
-				continue;
-			}
-
-			// send a ready response
-			strcpy(res, "ready");
-			write(sockfd, res, sizeof(res));
-
-			bzero(res, sizeof(res));
-			bzero(buff, sizeof(buff));
-
-			FILE* curFile;
-			for (int i = 1; i <= numFiles; i++)
-			{
-				read(sockfd, res, sizeof(res));
-				int fileSize = atoi(res);
-				
-				// get the file name
-				char fileName[MAX];
-				strcpy(fileName, directory);
-				strcat(fileName, "/");
-				strcat(fileName, arguments[i]);
-
-				int exists = DoesFileExist(fileName);
-				int shouldRead = !(exists && !overrite);
-
-				strcpy(res, shouldRead ? "read" : "continue");
-
-				write(sockfd, res, sizeof(res));
-				if (!shouldRead)
-					continue;
-
-				curFile = fopen(fileName, "w+");
-				
-				ssize_t remainingData = fileSize;
-				while (remainingData > 0)
-				{
-					ssize_t n = recv(sockfd, buff, MAX, 0);
-					remainingData -= n;
-					fprintf(curFile, "%s", buff);
-				}
-
-				printf("read file\n");
-
-				fclose(curFile);
-			}
-			
-			free(arguments);
+			ProcessPut(socketDescriptor, buff, res);
 		}
 		else if (strcmp(token, "get") == 0)
 		{			
@@ -122,7 +37,7 @@ void ChatToClient(int sockfd)
 			if (numArguments < 2)
 			{
 				strcpy(res, "done");
-				write(sockfd, res, sizeof(res));
+				write(socketDescriptor, res, sizeof(res));
 				continue;
 			}
 
@@ -134,7 +49,7 @@ void ChatToClient(int sockfd)
 			if (stat(directory, &st) == -1)
 			{
 				strcpy(res, "done");
-				write(sockfd, res, sizeof(res));
+				write(socketDescriptor, res, sizeof(res));
 				continue;
 			}
 
@@ -145,7 +60,7 @@ void ChatToClient(int sockfd)
 			if (!exists)
 			{
 				strcpy(res, "done");
-				write(sockfd, res, sizeof(res));
+				write(socketDescriptor, res, sizeof(res));
 			}
 			else
 			{
@@ -154,7 +69,7 @@ void ChatToClient(int sockfd)
 				int curLines = 0;
 				while (fgets(res, sizeof(res), file))
 				{
-					write(sockfd, res, sizeof(res));
+					write(socketDescriptor, res, sizeof(res));
 					curLines++;
 					
 					if (curLines == GET_LINE_COUNT)
@@ -162,10 +77,10 @@ void ChatToClient(int sockfd)
 						curLines = 0;
 
 						strcpy(res, "wait");
-						write(sockfd, res, sizeof(res));
+						write(socketDescriptor, res, sizeof(res));
 
 						// wait for a key to be pressed
-						read(sockfd, buff, sizeof(buff));
+						read(socketDescriptor, buff, sizeof(buff));
 					}
 				}
 
@@ -188,7 +103,7 @@ void ChatToClient(int sockfd)
 		}
 
 		// give the response
-		write(sockfd, res, sizeof(res));
+		write(socketDescriptor, res, sizeof(res));
 
 		if (strcmp(res, "exit") == 0)
 		{

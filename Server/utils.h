@@ -27,5 +27,6 @@
 #define SA struct sockaddr 
 
 char** GetArguments(int* arguments);
+int DoesFileExist(const char * filename);
 
 #endif

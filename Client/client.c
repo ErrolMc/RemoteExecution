@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "put.h"
 
 void ChatWithServer(int socketDescriptor) 
 { 
@@ -6,6 +7,7 @@ void ChatWithServer(int socketDescriptor)
 	char buff[MAX]; 
 	char res[MAX];
 	int n; 
+
 	for (;;) 
     { 
 		bzero(buff, sizeof(buff)); 
@@ -25,73 +27,7 @@ void ChatWithServer(int socketDescriptor)
 
 		if (strcmp(token, "put") == 0)
 		{
-			int numArguments = 0;
-			char** arguments = GetArguments(&numArguments);
-
-			if (numArguments > 0)
-			{
-				// send the line indicating the files
-				write(socketDescriptor, buff, sizeof(buff)); 
-
-				// wait for a response
-				read(socketDescriptor, buff, sizeof(buff)); 
-
-				if (strcmp(buff, "ready") == 0)
-				{
-					FILE* curFile;
-					struct stat fileStat;
-
-					// send the files 1 by 1
-					for (int i = 1; i < numArguments; i++)
-					{
-						// make sure we arent the -f arg
-						if (strcmp(arguments[i], "-f") == 0) 
-							continue;
-
-						bzero(res, sizeof(res)); 
-						bzero(buff, sizeof(buff));
-						
-						// open the file
-						curFile = fopen(arguments[i], "r"); 
-
-						if (curFile == -1)
-							continue;
-
-						// get the file stats
-						int statres = fstat(fileno(curFile), &fileStat);
-						if (statres < 0) 
-							continue;
-						
-						sprintf(res, "%d", fileStat.st_size);
-
-						printf("size: %s", res);
-
-						// write the file size
-						write(socketDescriptor, res, sizeof(res));
-
-						// read if we should send the file
-						read(socketDescriptor, buff, sizeof(buff));
-						
-						if (strcmp(buff, "read") != 0)
-							continue;
-						
-						while (fgets(buff, MAX, curFile) != NULL)
-						{
-							if (send(socketDescriptor, buff, sizeof(buff), 0) == -1)
-							{
-								printf("Error sending data\n");
-								break;
-							}
-						}
-						
-						fclose(curFile);
-					}
-				}
-				else if (strcmp(buff, "error") == 0)
-				{
-					continue;
-				}
-			}
+			ProcessPut(socketDescriptor, &buff, &res);
 		}
 		else if (strcmp(token, "get") == 0)
 		{
