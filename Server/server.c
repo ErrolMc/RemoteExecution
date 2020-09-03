@@ -64,18 +64,27 @@ void ChatToClient(int socketDescriptor)
 	} 
 } 
 
+void ZombieKill(int sig)
+{
+	int status;
+	if (waitpid(-1, &status, WNOHANG) < 0)
+		printf("Zombie Process Killed\n");
+}
+
 // Driver function 
 int main() 
 { 
 	const int BACKLOG = 5;
 
-	int socketDescriptor, connfd; 
+	int socketFD, connFD; 
 	struct sockaddr_in serverAddress, clientAdd; 
 	pid_t cpid;
 
+	signal(SIGCHLD, ZombieKill);
+
 	// socket create and verification 
-	socketDescriptor = socket(AF_INET, SOCK_STREAM, 0); 
-	if (socketDescriptor == -1) 
+	socketFD = socket(AF_INET, SOCK_STREAM, 0); 
+	if (socketFD == -1) 
     { 
 		printf("socket creation failed...\n"); 
 		exit(0); 
@@ -91,7 +100,7 @@ int main()
 	serverAddress.sin_port = htons(PORT); // "host byte order" to "network byte order" short
 
 	// Binding newly created socket to given IP and verification 
-	if ((bind(socketDescriptor, (SA*)&serverAddress, sizeof(serverAddress))) != 0) 
+	if ((bind(socketFD, (SA*)&serverAddress, sizeof(serverAddress))) != 0) 
     { 
 		printf("socket bind failed...\n"); 
 		exit(0); 
@@ -100,7 +109,7 @@ int main()
 		printf("Socket successfully binded..\n"); 
 
 	// Now server is ready to listen and verification 
-	if ((listen(socketDescriptor, BACKLOG)) != 0) 
+	if ((listen(socketFD, BACKLOG)) != 0) 
     { 
 		printf("Listen failed...\n"); 
 		exit(0); 
@@ -112,8 +121,8 @@ int main()
 	{
 		// Accept the data packet from client and verification 
 		int clientLen = sizeof(clientAdd); 
-		connfd = accept(socketDescriptor, (SA*)&clientAdd, &clientLen); 
-		if (connfd < 0) 
+		connFD = accept(socketFD, (SA*)&clientAdd, &clientLen); 
+		if (connFD < 0) 
 			exit(0);
 		else
 			printf("Server acccepted a client...\n"); 
@@ -127,15 +136,15 @@ int main()
 		}
 		else if (cpid == 0)
 		{
-			close(socketDescriptor);
+			close(socketFD);
 
 			// Function for chatting between client and server 
-			ChatToClient(connfd); 
+			ChatToClient(connFD); 
 
-			close(connfd);
+			close(connFD);
 		}
 	}
 
 	// After chatting close the socket 
-	close(socketDescriptor); 
+	close(socketFD); 
 } 

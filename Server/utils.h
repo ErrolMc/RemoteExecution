@@ -8,6 +8,7 @@
 #include <string.h> 
 #include <sys/socket.h> 
 #include <sys/types.h> 
+#include <signal.h>
 
 #include <stdio.h>
 #include <sys/types.h>
