@@ -69,8 +69,9 @@ int main()
 { 
 	const int BACKLOG = 5;
 
-	int socketDescriptor, connfd, len; 
-	struct sockaddr_in serverAddress, cli; 
+	int socketDescriptor, connfd; 
+	struct sockaddr_in serverAddress, clientAdd; 
+	pid_t cpid;
 
 	// socket create and verification 
 	socketDescriptor = socket(AF_INET, SOCK_STREAM, 0); 
@@ -107,20 +108,33 @@ int main()
 	else
 		printf("Server listening..\n"); 
     
-	len = sizeof(cli); 
+	while (1)
+	{
+		// Accept the data packet from client and verification 
+		int clientLen = sizeof(clientAdd); 
+		connfd = accept(socketDescriptor, (SA*)&clientAdd, &clientLen); 
+		if (connfd < 0) 
+			exit(0);
+		else
+			printf("Server acccepted a client...\n"); 
 
-	// Accept the data packet from client and verification 
-	connfd = accept(socketDescriptor, (SA*)&cli, &len); 
-	if (connfd < 0) 
-    {
-		printf("server acccept failed...\n"); 
-		exit(0); 
-	} 
-	else
-		printf("server acccept the client...\n"); 
+		// accept multiple clients
+		cpid = fork();
+		if (cpid < 0)
+		{
+			printf("fork failed\n");
+			exit(0);
+		}
+		else if (cpid == 0)
+		{
+			close(socketDescriptor);
 
-	// Function for chatting between client and server 
-	ChatToClient(connfd); 
+			// Function for chatting between client and server 
+			ChatToClient(connfd); 
+
+			close(connfd);
+		}
+	}
 
 	// After chatting close the socket 
 	close(socketDescriptor); 
