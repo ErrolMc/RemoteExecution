@@ -62,11 +62,11 @@ void ProcessPut(int socketDescriptor, char* buff, char* res)
 
         curFile = fopen(fileName, "w+");
         
-        ssize_t remainingData = fileSize;
-        while (remainingData > 0)
+        while (1)
         {
             ssize_t n = recv(socketDescriptor, buff, MAX, 0);
-            remainingData -= n;
+            if (strcmp(buff, "client_send_done") == 0)
+                break;
             fprintf(curFile, "%s", buff);
         }
 

@@ -58,7 +58,10 @@ void ProcessPut(int socketDescriptor, char* buff, char* res)
                         break;
                     }
                 }
-                
+
+                strcpy(buff, "client_send_done");
+                send(socketDescriptor, buff, MAX, 0);
+
                 fclose(curFile);
             }
         }
