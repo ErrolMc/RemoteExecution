@@ -26,9 +26,15 @@ void ProcessRun(int socketDescriptor, char* buff, char* res)
     strcat(runCMD, folder);
     strcat(runCMD, "/");
     strcat(runCMD, fileName);
+    
+    // populate the arguments array
+    char* args[numArguments];
+    args[0] = fileName;
+    for (int i = 2, ind = 1; i < numArguments; i++, ind++)
+        args[ind] = arguments[i];
+    args[numArguments-1] = NULL;
 
-    char* args[] = { fileName, NULL };
-
+    // run the program
     int link[2];
     pid_t pid;
     char progBuff[MAX];
