@@ -2,6 +2,7 @@
 #include "put.h"
 #include "get.h"
 #include "run.h"
+#include "list.h"
 
 // Function designed for chat between client and server. 
 void ChatToClient(int socketDescriptor) 
@@ -32,13 +33,13 @@ void ChatToClient(int socketDescriptor)
 		{			
 			ProcessGet(socketDescriptor, buff, res);
 		}
-		else if (strcmp(token, "get") == 0)
-		{
-			ProcessRun(socketDescriptor, buff, res);
-		}
 		else if (strcmp(token, "run") == 0)
 		{
 			ProcessRun(socketDescriptor, buff, res);
+		}
+		else if (strcmp(token, "list") == 0)
+		{
+			ProcessList(socketDescriptor, buff, res);
 		}
 		else if (strcmp(token, "sys") == 0)
 		{

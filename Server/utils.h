@@ -9,6 +9,8 @@
 #include <sys/socket.h> 
 #include <sys/types.h> 
 #include <signal.h>
+#include <dirent.h>
+#include <time.h>
 
 #include <stdio.h>
 #include <sys/types.h>

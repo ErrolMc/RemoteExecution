@@ -1,6 +1,6 @@
-server: server.o utils.o put.o get.o run.o
-	cc server.o utils.o put.o get.o run.o -o server
-server.o: server.c utils.h put.h get.h run.h
+server: server.o utils.o put.o get.o run.o list.o
+	cc server.o utils.o put.o get.o run.o list.o -o server
+server.o: server.c utils.h put.h get.h run.h list.h
 	cc -c server.c
 utils.o: utils.c utils.h
 	cc -c utils.c
@@ -10,3 +10,5 @@ get.o: get.c utils.h
 	cc -c get.c
 run.o: run.c utils.h
 	cc -c run.c
+list.o: list.c utils.h
+	cc -c list.c
