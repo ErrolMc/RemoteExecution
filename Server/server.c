@@ -3,6 +3,7 @@
 #include "get.h"
 #include "run.h"
 #include "list.h"
+#include "sys.h"
 
 // Function designed for chat between client and server. 
 void ChatToClient(int socketDescriptor) 
@@ -43,8 +44,7 @@ void ChatToClient(int socketDescriptor)
 		}
 		else if (strcmp(token, "sys") == 0)
 		{
-			strcpy(res, "sys processed");
-			write(socketDescriptor, res, MAX);
+			ProcessSys(socketDescriptor, buff, res);
 		}
 		else if (strcmp(token, "exit") == 0)
 		{

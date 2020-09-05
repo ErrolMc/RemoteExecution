@@ -3,6 +3,7 @@
 #include "get.h"
 #include "run.h"
 #include "list.h"
+#include "sys.h"
 
 void ChatWithServer(int socketDescriptor) 
 { 
@@ -42,6 +43,10 @@ void ChatWithServer(int socketDescriptor)
 		else if (strcmp(token, "list") == 0)
 		{
 			ProcessList(socketDescriptor, buff, res);
+		}
+		else if (strcmp(token, "sys") == 0)
+		{
+			ProcessSys(socketDescriptor, buff, res);
 		}
 		else
 		{

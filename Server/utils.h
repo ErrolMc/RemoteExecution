@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <dirent.h>
 #include <time.h>
+#include <sys/utsname.h>
 
 #include <stdio.h>
 #include <sys/types.h>
