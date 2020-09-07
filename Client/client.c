@@ -74,8 +74,14 @@ void ChatWithServer(int socketDescriptor)
 	} 
 } 
 
-int main() 
-{ 
+int main(int argc, char* argv[]) 
+{
+	if (argc < 2)
+	{
+		printf("Please enter an ip address\n");
+		exit(0);
+	}
+	
 	int socketDescriptor, connfd; 
 	struct sockaddr_in serverAddress, cli; 
 
@@ -93,8 +99,8 @@ int main()
 
 	// assign IP, PORT 
 	serverAddress.sin_family = AF_INET; 
-	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); 
-	//serverAddress.sin_addr.s_addr = inet_addr(argv[1]);
+	//serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+	serverAddress.sin_addr.s_addr = inet_addr(argv[1]);
 	serverAddress.sin_port = htons(PORT); 
 
 	// connect the client socket to server socket 
