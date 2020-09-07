@@ -7,8 +7,10 @@ void ProcessRun(int socketDescriptor, char* buff, char* res)
     int numArguments = 0;
     char** arguments = GetArguments(&numArguments);
 
+    char* fileName_extention = arguments[1];
+
     char* folder = arguments[0];
-    char* fileName = arguments[1];
+    char* fileName = strtok(fileName_extention, ".");
 
     char compileCMD[MAX] = "cc ";
     strcat(compileCMD, folder);
