@@ -12,6 +12,8 @@ void ChatToClient(int socketDescriptor)
 	char res[MAX];
 	char buff[MAX]; 
 
+	struct timespec ts;
+
     // infinite loop for chat 
 	for (;;) 
     { 
@@ -23,6 +25,7 @@ void ChatToClient(int socketDescriptor)
 		strcpy(buffCopy, buff);
 
 		printf("client > %s\n", buff);
+		TimerStart(&ts);
 
 		char* token = strtok(buffCopy, " ");
 		
@@ -60,8 +63,13 @@ void ChatToClient(int socketDescriptor)
 		else
 		{
 			strcpy(res, "unknown command");
-			write(socketDescriptor, res, sizeof(res));
+			write(socketDescriptor, res, MAX);
 		}
+
+		// report the time taken
+		int timeTaken = TimerStop(&ts);
+		sprintf(res, "server > time taken: %d\n", timeTaken);
+		write(socketDescriptor, res, MAX);
 	} 
 } 
 

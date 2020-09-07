@@ -12,6 +12,9 @@
 #include <dirent.h>
 #include <time.h>
 #include <sys/utsname.h>
+#include <time.h>
+#include <sys/time.h> 
+#include <sys/resource.h> 
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -33,5 +36,7 @@
 
 char** GetArguments(int* arguments);
 int DoesFileExist(const char * filename);
+void TimerStart(struct timespec *tp);
+int TimerStop(struct timespec *start);
 
 #endif

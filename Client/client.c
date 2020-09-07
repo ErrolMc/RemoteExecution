@@ -71,6 +71,10 @@ void ChatWithServer(int socketDescriptor)
 
 			printf("server > %s\n", buff);
 		}
+
+		// read the time taken
+		read(socketDescriptor, buff, MAX);
+		printf("%s", buff);
 	} 
 } 
 
@@ -81,7 +85,7 @@ int main(int argc, char* argv[])
 		printf("Please enter an ip address\n");
 		exit(0);
 	}
-	
+
 	int socketDescriptor, connfd; 
 	struct sockaddr_in serverAddress, cli; 
 

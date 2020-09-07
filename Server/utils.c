@@ -29,3 +29,15 @@ int DoesFileExist(const char * filename)
     }
     return 0;
 }
+
+void TimerStart(struct timespec *tp)
+{
+    clock_gettime(0, tp);
+}
+
+int TimerStop(struct timespec *start)
+{
+    struct timespec end;
+    clock_gettime(0, &end);
+    return end.tv_nsec - start->tv_nsec;
+}
