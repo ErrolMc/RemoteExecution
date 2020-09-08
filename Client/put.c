@@ -28,41 +28,51 @@ void ProcessPut(int socketDescriptor, char* buff, char* res)
                 bzero(res, MAX); 
                 bzero(buff, MAX);
                 
-                // open the file
-                curFile = fopen(arguments[i], "r"); 
-
-                if (curFile == -1)
-                    continue;
-
-                // get the file stats
-                int statres = fstat(fileno(curFile), &fileStat);
-                if (statres < 0) 
-                    continue;
-                
-                sprintf(res, "%d", fileStat.st_size);
-
-                // write the file size
-                write(socketDescriptor, res, MAX);
-
-                // read if we should send the file
-                read(socketDescriptor, buff, MAX);
-                
-                if (strcmp(buff, "read") != 0)
-                    continue;
-                
-                while (fgets(buff, MAX, curFile) != NULL)
+                int exists = DoesFileExist(arguments[i]);
+                if (exists)
                 {
-                    if (send(socketDescriptor, buff, MAX, 0) == -1)
+                    // open the file
+                    curFile = fopen(arguments[i], "r"); 
+
+                    if (curFile == -1)
+                        continue;
+
+                    // get the file stats
+                    int statres = fstat(fileno(curFile), &fileStat);
+                    if (statres < 0) 
+                        continue;
+                    
+                    sprintf(res, "%d", fileStat.st_size);
+
+                    // write the file size
+                    write(socketDescriptor, res, MAX);
+
+                    // read if we should send the file
+                    read(socketDescriptor, buff, MAX);
+                    
+                    if (strcmp(buff, "read") != 0)
+                        continue;
+                    
+                    while (fgets(buff, MAX, curFile) != NULL)
                     {
-                        printf("Error sending data\n");
-                        break;
+                        if (send(socketDescriptor, buff, MAX, 0) == -1)
+                        {
+                            printf("Error sending data\n");
+                            break;
+                        }
                     }
+
+                    strcpy(buff, "client_send_done");
+                    send(socketDescriptor, buff, MAX, 0);
+
+                    fclose(curFile);
                 }
-
-                strcpy(buff, "client_send_done");
-                send(socketDescriptor, buff, MAX, 0);
-
-                fclose(curFile);
+                else
+                {
+                    printf("File %s doesnt exist\n", arguments[i]);
+                    strcpy(buff, "file_error");
+                    write(socketDescriptor, buff, MAX);
+                }
             }
         }
         else if (strcmp(buff, "error") == 0)

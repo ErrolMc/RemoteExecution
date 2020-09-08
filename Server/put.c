@@ -43,36 +43,40 @@ void ProcessPut(int socketDescriptor, char* buff, char* res)
     for (int i = 1; i <= numFiles; i++)
     {
         read(socketDescriptor, res, MAX);
-        int fileSize = atoi(res);
-        
-        // get the file name
-        char fileName[MAX];
-        strcpy(fileName, directory);
-        strcat(fileName, "/");
-        strcat(fileName, arguments[i]);
 
-        int exists = DoesFileExist(fileName);
-        int shouldRead = !(exists && !overrite);
-
-        strcpy(res, shouldRead ? "read" : "continue");
-
-        write(socketDescriptor, res, MAX);
-        if (!shouldRead)
-            continue;
-
-        curFile = fopen(fileName, "w+");
-        
-        while (1)
+        if (strcmp(res, "file_error") != 0)
         {
-            ssize_t n = recv(socketDescriptor, buff, MAX, 0);
-            if (strcmp(buff, "client_send_done") == 0)
-                break;
-            fprintf(curFile, "%s", buff);
+            int fileSize = atoi(res);
+            
+            // get the file name
+            char fileName[MAX];
+            strcpy(fileName, directory);
+            strcat(fileName, "/");
+            strcat(fileName, arguments[i]);
+
+            int exists = DoesFileExist(fileName);
+            int shouldRead = !(exists && !overrite);
+
+            strcpy(res, shouldRead ? "read" : "continue");
+
+            write(socketDescriptor, res, MAX);
+            if (!shouldRead)
+                continue;
+
+            curFile = fopen(fileName, "w+");
+            
+            while (1)
+            {
+                ssize_t n = recv(socketDescriptor, buff, MAX, 0);
+                if (strcmp(buff, "client_send_done") == 0)
+                    break;
+                fprintf(curFile, "%s", buff);
+            }
+
+            printf("read file\n");
+
+            fclose(curFile);
         }
-
-        printf("read file\n");
-
-        fclose(curFile);
     }
     
     free(arguments);
