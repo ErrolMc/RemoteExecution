@@ -33,8 +33,6 @@ void ProcessRun(int socketDescriptor, char* buff, char* res)
     strcat(filePath, "/");
     strcat(filePath, fileName_extention);
 
-    printf("%s\n", filePath);
-
     int exists = DoesFileExist(filePath);
     if (!exists)
     {
@@ -56,8 +54,6 @@ void ProcessRun(int socketDescriptor, char* buff, char* res)
     {
         int fileCreationDate = GetCreationDate(filePath);
         int exeCreationDate = GetCreationDate(exePath);
-
-        printf("file: %d, exe: %d\n", fileCreationDate, exeCreationDate);
 
         if (fileCreationDate > exeCreationDate)
             shouldCompile = 1;
