@@ -9,7 +9,12 @@ void ProcessRun(int socketDescriptor, char* buff, char* res)
         bzero(buff, MAX);
         read(socketDescriptor, buff, MAX);
 
-        if (strcmp(buff, "done") == 0)
+        if (strcmp(buff, "file_error") == 0)
+        {
+            printf("Cant file file on server\n");
+            break;
+        }
+        else if (strcmp(buff, "done") == 0)
         {
             break;
         }

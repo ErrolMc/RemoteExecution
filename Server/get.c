@@ -15,22 +15,13 @@ void ProcessGet(int socketDescriptor, char* buff, char* res)
     // see if the directory exists
     char directory[MAX] = "./";
     strcat(directory, arguments[0]);
-
-    struct stat st;
-    if (stat(directory, &st) == -1)
-    {
-        strcpy(res, "done");
-        write(socketDescriptor, res, MAX);
-        return;
-    }
-
     strcat(directory, "/");
     strcat(directory, arguments[1]);
     int exists = DoesFileExist(directory);
 
     if (!exists)
     {
-        strcpy(res, "done");
+        strcpy(res, "file_doesnt_exist");
         write(socketDescriptor, res, MAX);
     }
     else

@@ -21,6 +21,11 @@ void ProcessGet(int socketDescriptor, char* buff, char* res)
         {
             break;
         }
+        else if (strcmp(buff, "file_doesnt_exist") == 0)
+        {
+            printf("Cant find file on server");
+            break;
+        }
         else
         {
             printf("%s", buff);

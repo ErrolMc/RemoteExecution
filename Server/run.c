@@ -2,30 +2,88 @@
 
 #define die(e) do { fprintf(stderr, "%s\n", e); exit(EXIT_FAILURE); } while (0);
 
+int GetCreationDate(const char* fileName)
+{
+    FILE *file;
+    if (file = fopen(fileName, "r"))
+	{
+        struct stat fileStat;
+        if (fstat(fileno(file), &fileStat) < 0) 
+            return 0;
+        
+        int creationDate = fileStat.st_ctime;
+
+        fclose(file);
+        return creationDate;
+    }
+    return 0;
+}
+
 void ProcessRun(int socketDescriptor, char* buff, char* res)
 {
     int numArguments = 0;
     char** arguments = GetArguments(&numArguments);
 
-    char* fileName_extention = arguments[1];
 
     char* folder = arguments[0];
+    char* fileName_extention = arguments[1];
+
+    char filePath[MAX];
+    strcpy(filePath, folder);
+    strcat(filePath, "/");
+    strcat(filePath, fileName_extention);
+
+    printf("%s\n", filePath);
+
+    int exists = DoesFileExist(filePath);
+    if (!exists)
+    {
+        strcpy(res, "file_error");
+        write(socketDescriptor, res, MAX);
+        return;
+    }
+
     char* fileName = strtok(fileName_extention, ".");
 
-    char compileCMD[MAX] = "cc ";
-    strcat(compileCMD, folder);
-    strcat(compileCMD, "/");
-    strcat(compileCMD, fileName);
-    strcat(compileCMD, ".c -o ");
-    strcat(compileCMD, folder);
-    strcat(compileCMD, "/");
-    strcat(compileCMD, fileName);
+    char exePath[MAX];
+    strcpy(exePath, folder);
+    strcat(exePath, "/");
+    strcat(exePath, fileName);
 
-    FILE* compileOutput = popen(compileCMD, "w");
-    fclose(compileOutput);
+    exists = DoesFileExist(exePath);
+    int shouldCompile = !exists;
+    if (exists)
+    {
+        int fileCreationDate = GetCreationDate(filePath);
+        int exeCreationDate = GetCreationDate(exePath);
+
+        printf("file: %d, exe: %d\n", fileCreationDate, exeCreationDate);
+
+        if (fileCreationDate > exeCreationDate)
+            shouldCompile = 1;
+    }
+
+    if (shouldCompile)
+    {
+        printf("Compiling file\n");
+
+        char compileCMD[MAX] = "cc ";
+        strcpy(compileCMD, folder);
+        strcat(compileCMD, "/");
+        strcat(compileCMD, fileName);
+        strcat(compileCMD, ".c -o ");
+        strcat(compileCMD, folder);
+        strcat(compileCMD, "/");
+        strcat(compileCMD, fileName);
+
+        FILE* compileOutput = popen(compileCMD, "w");
+        fclose(compileOutput);
+    }
+    else
+        printf("Dont need to compile file\n");
 
     char runCMD[MAX] = "./";
-    strcat(runCMD, folder);
+    strcpy(runCMD, folder);
     strcat(runCMD, "/");
     strcat(runCMD, fileName);
     
